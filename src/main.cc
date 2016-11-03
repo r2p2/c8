@@ -152,9 +152,27 @@ int main(int argc, char** argv)
 	WINDOW *keys;
 	keys = newwin(8, 11, 28, 69);
 
+	int key = 0;
+	int nokey = 0;
 	while(1)
 	{
-		int key = getch();
+		int newkey = getch();
+		if (newkey != ERR)
+		{
+			key = newkey;
+			nokey = 0;
+		}
+		else
+		{
+			++nokey;
+			if (nokey > 40)
+			{
+				key = ERR;
+				nokey = 0;
+			}
+
+		}
+
 		switch(key)
 		{
 		case '0': c.key(1 <<  0); break;
