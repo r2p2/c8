@@ -616,6 +616,9 @@ private:
         unsigned char x = _v[reg_nr_x];
         unsigned char y = _v[reg_nr_y];
 
+		x %= 64;
+		y %= 32;
+
 		for(int r = 0; r < bytes; ++r)
 		{
 			for (int c = 0; c < 8; ++c)
@@ -625,11 +628,8 @@ private:
 				unsigned char rx = x + c;
 				unsigned char ry = y + r;
 
-				while (rx >= 64)
-					rx -= 64;
-
-				while (ry >= 32)
-					ry -= 32;
+				if (rx > 63 or ry > 31)
+					continue;
 
 				size_t const index = ry*64 + rx;
 				if (not _v[0xF] and bit)
