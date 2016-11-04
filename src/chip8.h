@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+#include <vector>
 #include <iostream>
 #include <stdio.h>
 
@@ -13,16 +14,12 @@ public:
 	, _d(0)
 	, _s(0)
 	, _pc(0x200)
-	, _sp(0)
 	{
 		for (int i = 0; i < (64 * 32); ++i)
 			_display[i] = 0;
 
 		for (int i = 0; i < 4096; ++i)
 			_memory[i] = 0;
-
-		for (int i = 0; i < 16; ++i)
-			_stack[i] = 0;
 
 		for (int i = 0; i < 16; ++i)
 			_v[i] = 0;
@@ -151,7 +148,7 @@ public:
 
 	unsigned short sp() const
 	{
-		return _sp;
+		return _stack.size();
 	}
 
 	unsigned short l() const
@@ -174,10 +171,15 @@ public:
 		return _s;
 	}
 
+	std::vector<unsigned short> const& stack() const
+	{
+		return _stack;
+	}
+
 	void show()
 	{
 		printf("PC:%04x SP: %04x L:%04x D:%04x S:%04x => %02x%02x\n"
-		     , _pc, _sp, _l,  _d, _s, _memory[_pc], _memory[_pc+1]);
+		     , _pc, sp(), _l,  _d, _s, _memory[_pc], _memory[_pc+1]);
 		for (int i = 0; i <= 0xF; ++i)
 		{
 			printf("v[%02x]:%04x ", i, _v[i]);
@@ -444,8 +446,8 @@ private:
 
 	void _return()
 	{
-		--_sp;
-		_pc = _stack[_sp];
+		_pc = _stack.back();
+		_stack.pop_back();
 
 		_next();
 	}
@@ -457,8 +459,7 @@ private:
 
 	void _call(unsigned short addr)
 	{
-		_stack[_sp] = _pc;
-		++_sp;
+		_stack.push_back(_pc);
 		_pc = addr;
 	}
 
@@ -733,19 +734,18 @@ private:
 	}
 
 private:
-	std::random_device _rnd_engine;
-	unsigned short     _input;
-	bool               _display[64 * 32];
+	std::random_device          _rnd_engine;
+	unsigned short              _input;
+	bool                        _display[64 * 32];
 
-	unsigned char      _memory[4096];
-	unsigned short     _stack[16];
+	unsigned char               _memory[4096];
+	std::vector<unsigned short> _stack;
 
-	unsigned short     _v[16];
-	unsigned short     _l;
+	unsigned short              _v[16];
+	unsigned short              _l;
 
-	unsigned char      _d;
-	unsigned char      _s;
+	unsigned char               _d;
+	unsigned char               _s;
 
-	unsigned short     _pc;
-	unsigned short     _sp;
+	unsigned short              _pc;
 };
