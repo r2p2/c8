@@ -223,7 +223,7 @@ int main(int argc, char** argv)
 
 		c.tick();
 #if 1
-		msleep(20);
+		msleep(15);
 #else
 		timeout(-10);
 		getch();
