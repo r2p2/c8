@@ -489,8 +489,8 @@ private:
 
 	void _add(unsigned char reg_nr, unsigned short value)
 	{
-		unsigned short sum = static_cast<unsigned short>(_v[reg_nr])
-		                   + value;
+		unsigned int sum = static_cast<unsigned int>(_v[reg_nr])
+		                 + static_cast<unsigned int>(value);
 
 		_v[0xF] = sum > 255;
 		_v[reg_nr] = static_cast<unsigned short>(sum);
@@ -528,8 +528,8 @@ private:
 
 	void _add(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
-		unsigned short sum = static_cast<unsigned short>(_v[reg_nr_a])
-		                   + static_cast<unsigned short>(_v[reg_nr_b]);
+		unsigned int sum = static_cast<unsigned int>(_v[reg_nr_a])
+		                 + static_cast<unsigned int>(_v[reg_nr_b]);
 
 		_v[0xF] = sum > 255;
 
