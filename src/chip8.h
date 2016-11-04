@@ -176,36 +176,9 @@ public:
 		return _stack;
 	}
 
-	void show()
-	{
-		printf("PC:%04x SP: %04x L:%04x D:%04x S:%04x => %02x%02x\n"
-		     , _pc, sp(), _l,  _d, _s, _memory[_pc], _memory[_pc+1]);
-		for (int i = 0; i <= 0xF; ++i)
-		{
-			printf("v[%02x]:%04x ", i, _v[i]);
-		}
-		printf("\n");
-	}
-
-
 	auto get_display() -> bool (&)[64*32]
 	{
 		return _display;
-	}
-
-	void display()
-	{
-		for (int y = 0; y < 32; ++y)
-		{
-			for (int x = 0; x < 64; ++x)
-			{
-				if (_display[y*64 + x])
-					printf("X");
-				else
-					printf(" ");
-			}
-			printf("\n");
-		}
 	}
 
 	void tick()
