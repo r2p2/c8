@@ -22,12 +22,17 @@ int msleep(unsigned long milisec)
 
 void update_display(WINDOW* w, bool (&display)[64*32])
 {
-	char c;
 	for (int y = 0; y < 32; ++y)
 		for (int x = 0; x < 64; ++x)
 		{
-			c = (display[y*64 + x]) ? 'X' : ' ';
-			mvwprintw(w, y+1, x+1, "%c", c);
+			bool const active = display[y*64 + x];
+			if (active)
+				wattrset(w, A_REVERSE);
+
+			mvwprintw(w, y+1, x+1, " ");
+
+			if (active)
+				wattroff(w, A_REVERSE);
 		}
 	box(w, 0, 0);
 	mvwprintw(w, 0, 2, "Display");
