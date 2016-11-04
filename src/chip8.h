@@ -430,6 +430,7 @@ private:
 	void _cls()
 	{
 		_redraw = true;
+
 		for (int i = 0; i < (64 * 32); ++i)
 			_display[i] = 0;
 
@@ -539,7 +540,7 @@ private:
 
 	void _sub(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
-		_v[0xF] = _v[reg_nr_a] > _v[reg_nr_b];
+		_v[0xF] = _v[reg_nr_a] < _v[reg_nr_b];
 
 		_v[reg_nr_a] -= _v[reg_nr_b];
 
@@ -557,7 +558,7 @@ private:
 
 	void _subn(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
-		_v[0xF] = _v[reg_nr_b] > _v[reg_nr_a];
+		_v[0xF] = _v[reg_nr_b] < _v[reg_nr_a];
 
 		_v[reg_nr_a] = _v[reg_nr_b] - _v[reg_nr_a];
 
