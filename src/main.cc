@@ -58,6 +58,16 @@ void update_timer(WINDOW* w, Chip8 const& c)
 	mvwprintw(w, 0, 2, "Timer");
 }
 
+void update_stack(WINDOW* w, Chip8 const& c)
+{
+	auto const& stack =  c.stack();
+	for (int i = 0; i < stack.size(); ++i)
+		mvwprintw(w, 1+i, 2, "0x%04X", stack[i]);
+
+	box(w, 0, 0);
+	mvwprintw(w, 0, 2, "Stack");
+}
+
 void update_keys(WINDOW* w, Chip8 const& c)
 {
 	struct Key {
@@ -152,6 +162,10 @@ int main(int argc, char** argv)
 	WINDOW *keys;
 	keys = newwin(8, 11, 28, 69);
 
+	WINDOW *stack;
+	stack = newwin(18, 10, 2, 81);
+
+
 	int key = 0;
 	int nokey = 0;
 	while(1)
@@ -199,11 +213,13 @@ int main(int argc, char** argv)
 		update_regs(regs, c);
 		update_timer(timer, c);
 		update_keys(keys, c);
+		update_stack(stack, c);
 
 		wrefresh(canvas);
 		wrefresh(regs);
 		wrefresh(timer);
 		wrefresh(keys);
+		wrefresh(stack);
 
 		c.tick();
 #if 1
