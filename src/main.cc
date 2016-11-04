@@ -20,8 +20,15 @@ int msleep(unsigned long milisec)
     return 1;
 }
 
-void update_display(WINDOW* w, bool (&display)[64*32])
+void update_display(WINDOW* w, Chip8 const& c/*bool (&display)[64*32]*/)
 {
+	box(w, 0, 0);
+	mvwprintw(w, 0, 2, "Display");
+
+	if (not c.redraw())
+		return;
+
+	auto const& display = c.get_display();
 	for (int y = 0; y < 32; ++y)
 		for (int x = 0; x < 64; ++x)
 		{
@@ -34,8 +41,6 @@ void update_display(WINDOW* w, bool (&display)[64*32])
 			if (active)
 				wattroff(w, A_REVERSE);
 		}
-	box(w, 0, 0);
-	mvwprintw(w, 0, 2, "Display");
 }
 
 void update_regs(WINDOW* w, Chip8 const& c)
@@ -214,7 +219,7 @@ int main(int argc, char** argv)
 			c.key(0);
 		}
 
-		update_display(canvas, c.get_display());
+		update_display(canvas, c);
 		update_regs(regs, c);
 		update_timer(timer, c);
 		update_keys(keys, c);

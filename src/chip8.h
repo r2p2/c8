@@ -10,6 +10,7 @@ public:
 	Chip8()
 	: _rnd_engine()
 	, _input(0)
+	, _redraw(false)
 	, _memory(4096, 0x00)
 	, _stack()
 	, _l(0)
@@ -186,13 +187,20 @@ public:
 		return _stack;
 	}
 
-	auto get_display() -> bool (&)[64*32]
+	bool redraw() const
+	{
+		return _redraw;
+	}
+
+	auto get_display() const -> const bool (&)[64*32]
 	{
 		return _display;
 	}
 
 	void tick()
 	{
+		_redraw = false;
+
 		_exec();
 
 		if (_d > 0)
@@ -421,6 +429,7 @@ private:
 
 	void _cls()
 	{
+		_redraw = true;
 		for (int i = 0; i < (64 * 32); ++i)
 			_display[i] = 0;
 
@@ -595,6 +604,7 @@ private:
 	        , unsigned char reg_nr_y
 	        , unsigned char bytes)
 	{
+		_redraw = true;
 		_v[0xF] = 0x00;
 
         unsigned char x = _v[reg_nr_x];
@@ -720,6 +730,7 @@ private:
 	std::random_device          _rnd_engine;
 	unsigned short              _input;
 	bool                        _display[64 * 32];
+	bool                        _redraw;
 
 	std::vector<unsigned char>  _memory;
 	std::vector<unsigned short> _stack;
