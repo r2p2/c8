@@ -259,6 +259,7 @@ int main(int argc, char** argv)
 	delwin(timer);
 	delwin(regs);
 	delwin(canvas);
+	delwin(stack);
 	endwin();
 	return 0;
 }
