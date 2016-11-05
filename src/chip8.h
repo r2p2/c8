@@ -218,197 +218,221 @@ public:
 private:
 	void _exec()
 	{
-		unsigned int i = _memory[_pc] << 8 | _memory[_pc + 1];
+		unsigned short opcode = _memory[_pc] << 8 | _memory[_pc + 1];
+		unsigned char  i      = (opcode & 0xF000) >> 12;
+		unsigned short nnn    = (opcode & 0x0FFF);
+		unsigned char  kk     = (opcode & 0x00FF);
+		unsigned char  x      = (opcode & 0x0F00) >>  8;
+		unsigned char  y      = (opcode & 0x00F0) >>  4;
+		unsigned char  p      = (opcode & 0x000F);
 
-		if (i == 0x00E0)
+		if (opcode == 0x00E0)
+		{
 			_cls();
-		else if (i == 0x00EE)
+			return;
+		}
+
+		if (opcode == 0x00EE)
+		{
 			_return();
-		else if ((i & 0xFF00) == 0x0000)
+			return;
+		}
+
+		if ((opcode & 0xFF00) == 0x0000)
+		{
 			_next();
-		else if ((i & 0xF000) == 0x1000)
-			_jmp(i & 0x0FFF);
-		else if ((i & 0xF000) == 0x2000)
-			_call(i & 0x0FFF);
-		else if ((i & 0xF000) == 0x3000)
-		{
-			unsigned char  reg_nr = (i & 0x0F00) >> 8;
-			unsigned short value  = (i & 0x00FF);
-			_se(reg_nr, value);
+			return;
 		}
-		else if ((i & 0xF000) == 0x4000)
-		{
-			unsigned char  reg_nr = (i & 0x0F00) >> 8;
-			unsigned short value  = (i & 0x00FF);
-			_sne(reg_nr, value);
-		}
-		else if ((i & 0xF000) == 0x5000)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_se(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF000) == 0x6000)
-		{
-			unsigned char  reg_nr = (i & 0x0F00) >> 8;
-			unsigned short value  = (i & 0x00FF);
-			_ld(reg_nr, value);
-		}
-		else if ((i & 0xF000) == 0x7000)
-		{
-			unsigned char  reg_nr = (i & 0x0F00) >> 8;
-			unsigned short value  = (i & 0x00FF);
-			_add(reg_nr, value);
-		}
-		else if ((i & 0xF00F) == 0x8000)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_ld(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8001)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_or(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8002)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_and(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8003)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_xor(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8004)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_add(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8005)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_sub(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8006)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_shr(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x8007)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_subn(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF00F) == 0x800E)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_shr(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF000) == 0x9000)
-		{
-			unsigned char reg_nr_a = (i & 0x0F00) >> 8;
-			unsigned char reg_nr_b = (i & 0x00F0) >> 4;
-			_sne(reg_nr_a, reg_nr_b);
-		}
-		else if ((i & 0xF000) == 0xA000)
-		{
-			unsigned short value  = (i & 0x0FFF);
-			_ld(value);
-		}
-		else if ((i & 0xF000) == 0xB000)
-		{
-			unsigned short addr  = (i & 0x0FFF);
-			_jmp_v0(addr);
-		}
-		else if ((i & 0xF000) == 0xC000)
-		{
-			unsigned char  reg_nr = (i & 0x0F00) >> 8;
-			unsigned short value  = (i & 0x00FF);
-			_rnd(reg_nr, value);
-		}
-		else if ((i & 0xF000) == 0xD000)
-		{
-			unsigned char bytes    = i & 0x000F;
-			unsigned char reg_nr_y = (i & 0X00F0) >> 4;
-			unsigned char reg_nr_x = (i & 0X0F00) >> 8;
 
-			_drw(reg_nr_x, reg_nr_y, bytes);
-		}
-		else if ((i & 0xF0FF) == 0xE09E)
+		if (i == 1)
 		{
-			unsigned char key_nr = (i & 0X0F00) >> 8;
-
-			_skp(key_nr);
+			_jmp(nnn);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xE0A1)
-		{
-			unsigned char key_nr = (i & 0X0F00) >> 8;
 
-			_sknp(key_nr);
+		if (i == 2)
+		{
+			_call(nnn);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF007)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_ldd(reg_nr);
+		if (i == 3)
+		{
+			_se1(x, kk);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF00A)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_wk(reg_nr);
+		if (i == 4)
+		{
+			_sne1(x, kk);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF015)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_sdd(reg_nr);
+		if (i == 5)
+		{
+			_se2(x, y);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF018)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_sds(reg_nr);
+		if (i == 6)
+		{
+			_ld1(x, kk);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF01E)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_addl(reg_nr);
+		if (i == 7)
+		{
+			_add1(x, kk);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF029)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_ldl(reg_nr);
+		if (i == 8 && p == 0)
+		{
+			_ld2(x, y);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF033)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_ldb(reg_nr);
+		if (i == 8 && p == 1)
+		{
+			_or(x, y);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF055)
-		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
 
-			_store(reg_nr);
+		if (i == 8 && p == 2)
+		{
+			_and(x, y);
+			return;
 		}
-		else if ((i & 0xF0FF) == 0xF065)
+		if (i == 8 && p == 3)
 		{
-			unsigned char reg_nr = (i & 0X0F00) >> 8;
+			_xor(x, y);
+			return;
+		}
 
-			_load(reg_nr);
+		if (i == 8 && p == 4)
+		{
+			_add2(x, y);
+			return;
+		}
+
+		if (i == 8 && p == 5)
+		{
+			_sub(x, y);
+			return;
+		}
+
+		if (i == 8 && p == 6)
+		{
+			_shr(x, y);
+			return;
+		}
+
+		if (i == 8 && p == 7)
+		{
+			_subn(x, y);
+			return;
+		}
+
+		if (i == 8 && p == 8)
+		{
+			_shr(x, y);
+			return;
+		}
+
+		if (i == 9)
+		{
+			_sne2(x, y);
+			return;
+		}
+
+		if (i == 0xA)
+		{
+			_ld(nnn);
+			return;
+		}
+
+		if (i == 0xB)
+		{
+			_jmp_v0(nnn);
+			return;
+		}
+
+		if (i == 0xC)
+		{
+			_rnd(x, kk);
+			return;
+		}
+
+		if (i == 0xD)
+		{
+			_drw(x, y, p);
+			return;
+		}
+
+		if (i == 0xE and kk == 0x9E)
+		{
+			_skp(x);
+			return;
+		}
+
+		if (i == 0xE and kk == 0xA1)
+		{
+			_sknp(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x07)
+		{
+			_ldd(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x0A)
+		{
+			_wk(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x15)
+		{
+			_sdd(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x18)
+		{
+			_sds(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x1E)
+		{
+			_addl(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x29)
+		{
+			_ldl(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x33)
+		{
+			_ldb(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x55)
+		{
+			_store(x);
+			return;
+		}
+
+		if (i == 0xF and kk == 0x65)
+		{
+			_load(x);
+			return;
 		}
 	}
 
@@ -456,23 +480,23 @@ private:
 		_pc = addr;
 	}
 
-	void _se(unsigned char reg_nr, unsigned short value)
+	void _se1(unsigned char reg_nr, unsigned char value)
 	{
-		if ((_v[reg_nr] & 0xFF) == (value & 0xFF))
+		if (_v[reg_nr] == value)
 			_next();
 
 		_next();
 	}
 
-	void _sne(unsigned char reg_nr, unsigned short value)
+	void _sne1(unsigned char reg_nr, unsigned char value)
 	{
-		if (_v[reg_nr] != (value & 0xFF))
+		if (_v[reg_nr] != value)
 			_next();
 
 		_next();
 	}
 
-	void _se(unsigned char reg_nr_a, unsigned char reg_nr_b)
+	void _se2(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
 		if (_v[reg_nr_a] == _v[reg_nr_b])
 			_next();
@@ -480,25 +504,25 @@ private:
 		_next();
 	}
 
-	void _ld(unsigned char reg_nr, unsigned short value)
+	void _ld1(unsigned char reg_nr, unsigned char value)
 	{
 		_v[reg_nr] = value;
 
 		_next();
 	}
 
-	void _add(unsigned char reg_nr, unsigned short value)
+	void _add1(unsigned char reg_nr, unsigned char value)
 	{
-		unsigned int sum = static_cast<unsigned int>(_v[reg_nr])
-		                 + static_cast<unsigned int>(value);
+		unsigned short sum = static_cast<unsigned short>(_v[reg_nr])
+		                   + static_cast<unsigned short>(value);
 
 		_v[0xF] = sum > 255;
-		_v[reg_nr] = static_cast<unsigned short>(sum);
+		_v[reg_nr] = static_cast<unsigned char>(sum);
 
 		_next();
 	}
 
-	void _ld(unsigned char reg_nr_a, unsigned char reg_nr_b)
+	void _ld2(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
 		_v[reg_nr_a] = _v[reg_nr_b];
 
@@ -526,14 +550,14 @@ private:
 		_next();
 	}
 
-	void _add(unsigned char reg_nr_a, unsigned char reg_nr_b)
+	void _add2(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
-		unsigned int sum = static_cast<unsigned int>(_v[reg_nr_a])
-		                 + static_cast<unsigned int>(_v[reg_nr_b]);
+		unsigned short sum = static_cast<unsigned short>(_v[reg_nr_a])
+		                   + static_cast<unsigned short>(_v[reg_nr_b]);
 
 		_v[0xF] = sum > 255;
 
-		_v[reg_nr_a] = static_cast<unsigned short>(sum);
+		_v[reg_nr_a] = static_cast<unsigned char>(sum);
 
 		_next();
 	}
@@ -574,7 +598,7 @@ private:
 		_next();
 	}
 
-	void _sne(unsigned char reg_nr_a, unsigned char reg_nr_b)
+	void _sne2(unsigned char reg_nr_a, unsigned char reg_nr_b)
 	{
 		if (_v[reg_nr_a] != _v[reg_nr_b])
 			_next();
@@ -639,7 +663,7 @@ private:
 
 	void _skp(unsigned char key_nr)
 	{
-		if ((_input >> _v[key_nr]) & 0x1)
+		if (_input & (0x0001 << key_nr))
 			_next();
 
 		_next();
@@ -647,7 +671,7 @@ private:
 
 	void _sknp(unsigned char key_nr)
 	{
-		if ((_input >> _v[key_nr]) & 0x1)
+		if (not (_input & (0x0001 << key_nr)))
 			_next();
 
 		_next();
@@ -662,12 +686,15 @@ private:
 
 	void _wk(unsigned char reg_nr)
 	{
-		if (not _input)
-			return;
+		_v[reg_nr] = 0;
+		while (_input > 0x0001)
+		{
+			++_v[reg_nr];
+			_input >>= 1;
+		}
 
-		_v[reg_nr] = _input;
-
-		_next();
+		if (_v[reg_nr])
+			_next();
 	}
 
 	void _sdd(unsigned char reg_nr)
@@ -736,7 +763,7 @@ private:
 	std::vector<unsigned char>  _memory;
 	std::vector<unsigned short> _stack;
 
-	unsigned short              _v[16];
+	unsigned char               _v[16];
 	unsigned short              _l;
 
 	unsigned char               _d;
