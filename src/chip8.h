@@ -229,12 +229,16 @@ private:
 		if (opcode == 0x00E0)
 		{
 			_cls();
+			_next();
 			return;
 		}
 
 		if (opcode == 0x00EE)
 		{
-			_return();
+			_pc = _stack.back();
+			_stack.pop_back();
+
+			_next();
 			return;
 		}
 
@@ -244,195 +248,95 @@ private:
 			return;
 		}
 
-		if (i == 1)
+		switch (i)
 		{
-			_jmp(nnn);
-			return;
-		}
+		case 0x1: _pc = nnn;                                   break; // jmp
+		case 0x2: _stack.push_back(_pc); _pc = nnn;            break; // call
+		case 0x3: if (_v[x] == kk) { _next(); }       _next(); break; // sk.e
+		case 0x4: if (_v[x] != kk) { _next(); }       _next(); break; // sk.ne
+		case 0x5: if (_v[x] == _v[y]) { _next(); }    _next(); break; // sk.e
+		case 0x6: _v[x] = kk;                         _next(); break; // mov
+		case 0x7:                                                     // add
+			{
+			unsigned short s = _v[x] + kk;
+			_v[0xF]          = s > 255;
+			_v[x]            = static_cast<unsigned char>(s);
+			_next();
+			break;
+			}
+		case 0x8:
+			switch (p)
+			{
+			case 0: _v[x]  = _v[y];                          break; // mov
+			case 1: _v[x] |= _v[y];                          break; // or
+			case 2: _v[x] &= _v[y];                          break; // and
+			case 3: _v[x] ^= _v[y];                          break; // xor
+			case 4:                                                 // add
+				{
+				unsigned short s = _v[x] + _v[y];
+				_v[0xF]          = s > 250;
+				_v[x]            = static_cast<unsigned char>(s);
+				break;
+				}
+			case 5: _v[0xF] = _v[x] < _v[y]; _v[x] -= _v[y];        break; // sub
+			case 6: _v[0xF] = _v[x] & 1;     _v[x] >>= 1;           break; // shr
+			case 7: _v[0xF] = _v[x] > _v[y]; _v[x] = _v[y] - _v[x]; break; // sub
+			case 8: _v[0xF] = _v[x] & 0x8;   _v[x] <<= 1;           break; // shl
 
-		if (i == 2)
-		{
-			_call(nnn);
-			return;
-		}
+			}
+			_next();
+			break;
+		case 0x9: if (_v[x] != _v[y]) { _next(); }    _next(); break; // sk.ne
+		case 0xA: _l = nnn;                           _next(); break; // mov
+		case 0xB: _pc = nnn + _v[0];                           break; // jmp
+		case 0xC: _v[x] = _rnd_engine() & kk;         _next(); break; // rnd
+		case 0xD: _drw(x, y, p);                      _next(); break; // drw
+		case 0xE:
+			switch (kk)
+			{
+			case 0x9E: if (_input & (1 << x)) _next();         break; // skp
+			case 0xA1: if (!(_input & (1 << x))) _next();      break; // skp
+			}
+			_next();
+			break;
+		case 0xF:
+			switch (kk)
+			{
+			case 0x07: _v[x] = _d;                    _next(); break; // mov
+			case 0x0A:                                                // wk
+				_v[x] = 0;
+				while (_input > 1)
+				{
+					++_v[x];
+					_input >>= 1;
+				}
+				if (_v[x])
+					_next();
+			case 0x15: _d = _v[x];                    _next(); break;
+			case 0x18: _s = _v[x];                    _next(); break;
+			case 0x1E: _l += _v[x];                    _next(); break;
+			case 0x29: _l = _v[x] * 5;                _next(); break;
+			case 0x33:
+				_memory[_l]     = _v[x] / 100;
+				_memory[_l + 1] = _v[x] / 10 % 10;
+				_memory[_l + 2] = _v[x] % 10;
 
-		if (i == 3)
-		{
-			_se1(x, kk);
-			return;
-		}
+				_next();
+				break;
+			case 0x55:
+				for (int i = 0; i <= x; ++i)
+					_memory[_l+i] = _v[i];
 
-		if (i == 4)
-		{
-			_sne1(x, kk);
-			return;
-		}
+				_next();
+				break;
+			case 0x65:
+				for (int i = 0; i <= x; ++i)
+					_v[i] = _memory[_l+i];
 
-		if (i == 5)
-		{
-			_se2(x, y);
-			return;
-		}
-
-		if (i == 6)
-		{
-			_ld1(x, kk);
-			return;
-		}
-
-		if (i == 7)
-		{
-			_add1(x, kk);
-			return;
-		}
-
-		if (i == 8 && p == 0)
-		{
-			_ld2(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 1)
-		{
-			_or(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 2)
-		{
-			_and(x, y);
-			return;
-		}
-		if (i == 8 && p == 3)
-		{
-			_xor(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 4)
-		{
-			_add2(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 5)
-		{
-			_sub(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 6)
-		{
-			_shr(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 7)
-		{
-			_subn(x, y);
-			return;
-		}
-
-		if (i == 8 && p == 8)
-		{
-			_shr(x, y);
-			return;
-		}
-
-		if (i == 9)
-		{
-			_sne2(x, y);
-			return;
-		}
-
-		if (i == 0xA)
-		{
-			_ld(nnn);
-			return;
-		}
-
-		if (i == 0xB)
-		{
-			_jmp_v0(nnn);
-			return;
-		}
-
-		if (i == 0xC)
-		{
-			_rnd(x, kk);
-			return;
-		}
-
-		if (i == 0xD)
-		{
-			_drw(x, y, p);
-			return;
-		}
-
-		if (i == 0xE and kk == 0x9E)
-		{
-			_skp(x);
-			return;
-		}
-
-		if (i == 0xE and kk == 0xA1)
-		{
-			_sknp(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x07)
-		{
-			_ldd(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x0A)
-		{
-			_wk(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x15)
-		{
-			_sdd(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x18)
-		{
-			_sds(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x1E)
-		{
-			_addl(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x29)
-		{
-			_ldl(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x33)
-		{
-			_ldb(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x55)
-		{
-			_store(x);
-			return;
-		}
-
-		if (i == 0xF and kk == 0x65)
-		{
-			_load(x);
-			return;
+				_next();
+				break;
+			}
+			break;
 		}
 	}
 
@@ -457,172 +361,6 @@ private:
 
 		for (int i = 0; i < (64 * 32); ++i)
 			_display[i] = 0;
-
-		_next();
-	}
-
-	void _return()
-	{
-		_pc = _stack.back();
-		_stack.pop_back();
-
-		_next();
-	}
-
-	void _jmp(unsigned short addr)
-	{
-		_pc = addr;
-	}
-
-	void _call(unsigned short addr)
-	{
-		_stack.push_back(_pc);
-		_pc = addr;
-	}
-
-	void _se1(unsigned char reg_nr, unsigned char value)
-	{
-		if (_v[reg_nr] == value)
-			_next();
-
-		_next();
-	}
-
-	void _sne1(unsigned char reg_nr, unsigned char value)
-	{
-		if (_v[reg_nr] != value)
-			_next();
-
-		_next();
-	}
-
-	void _se2(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		if (_v[reg_nr_a] == _v[reg_nr_b])
-			_next();
-
-		_next();
-	}
-
-	void _ld1(unsigned char reg_nr, unsigned char value)
-	{
-		_v[reg_nr] = value;
-
-		_next();
-	}
-
-	void _add1(unsigned char reg_nr, unsigned char value)
-	{
-		unsigned short sum = static_cast<unsigned short>(_v[reg_nr])
-		                   + static_cast<unsigned short>(value);
-
-		_v[0xF] = sum > 255;
-		_v[reg_nr] = static_cast<unsigned char>(sum);
-
-		_next();
-	}
-
-	void _ld2(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[reg_nr_a] = _v[reg_nr_b];
-
-		_next();
-	}
-
-	void _or(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[reg_nr_a] |= _v[reg_nr_b];
-
-		_next();
-	}
-
-	void _and(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[reg_nr_a] &= _v[reg_nr_b];
-
-		_next();
-	}
-
-	void _xor(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[reg_nr_a] ^= _v[reg_nr_b];
-
-		_next();
-	}
-
-	void _add2(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		unsigned short sum = static_cast<unsigned short>(_v[reg_nr_a])
-		                   + static_cast<unsigned short>(_v[reg_nr_b]);
-
-		_v[0xF] = sum > 255;
-
-		_v[reg_nr_a] = static_cast<unsigned char>(sum);
-
-		_next();
-	}
-
-	void _sub(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[0xF] = _v[reg_nr_a] < _v[reg_nr_b];
-
-		_v[reg_nr_a] -= _v[reg_nr_b];
-
-		_next();
-	}
-
-	void _shr(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[0xF] = _v[reg_nr_a] & 0x1;
-
-		_v[reg_nr_a] >>= 1;
-
-		_next();
-	}
-
-	void _subn(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[0xF] = _v[reg_nr_b] < _v[reg_nr_a];
-
-		_v[reg_nr_a] = _v[reg_nr_b] - _v[reg_nr_a];
-
-		_next();
-	}
-
-	void _shl(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		_v[0xF] = _v[reg_nr_a] & 0x8;
-
-		_v[reg_nr_a] <<= 1;
-
-		_next();
-	}
-
-	void _sne2(unsigned char reg_nr_a, unsigned char reg_nr_b)
-	{
-		if (_v[reg_nr_a] != _v[reg_nr_b])
-			_next();
-
-		_next();
-	}
-
-	void _ld(unsigned short value)
-	{
-		_l = value;
-
-		_next();
-	}
-
-	void _jmp_v0(unsigned short addr)
-	{
-		_pc = addr + _v[0];
-	}
-
-	void _rnd(unsigned char reg_nr, unsigned short value)
-	{
-		_v[reg_nr] = static_cast<unsigned char>(_rnd_engine()) & value;
-
-		_next();
 	}
 
 	void _drw(unsigned char reg_nr_x
@@ -657,101 +395,6 @@ private:
 				_display[index] ^= bit;
 			}
 		}
-
-		_next();
-	}
-
-	void _skp(unsigned char key_nr)
-	{
-		if (_input & (0x0001 << key_nr))
-			_next();
-
-		_next();
-	}
-
-	void _sknp(unsigned char key_nr)
-	{
-		if (not (_input & (0x0001 << key_nr)))
-			_next();
-
-		_next();
-	}
-
-	void _ldd(unsigned char reg_nr)
-	{
-		_v[reg_nr] = _d;
-
-		_next();
-	}
-
-	void _wk(unsigned char reg_nr)
-	{
-		_v[reg_nr] = 0;
-		while (_input > 0x0001)
-		{
-			++_v[reg_nr];
-			_input >>= 1;
-		}
-
-		if (_v[reg_nr])
-			_next();
-	}
-
-	void _sdd(unsigned char reg_nr)
-	{
-		_d = _v[reg_nr];
-
-		_next();
-	}
-
-	void _sds(unsigned char reg_nr)
-	{
-		_s = _v[reg_nr];
-
-		_next();
-	}
-
-	void _addl(unsigned char reg_nr)
-	{
-		_l += _v[reg_nr];
-
-		_next();
-	}
-
-	void _ldl(unsigned char reg_nr)
-	{
-		_l = _v[reg_nr]*5;
-
-		_next();
-	}
-
-	void _ldb(unsigned char reg_nr)
-	{
-		_memory[_l]     = _v[reg_nr] / 100;
-		_memory[_l + 1] = _v[reg_nr] / 10 % 10;
-		_memory[_l + 2] = _v[reg_nr] % 10;
-
-		_next();
-	}
-
-	void _store(unsigned char reg_nr)
-	{
-		for (int i = 0; i <= reg_nr; ++i)
-		{
-			_memory[_l+i] = _v[i];
-		}
-
-		_next();
-	}
-
-	void _load(unsigned char reg_nr)
-	{
-		for (int i = 0; i <= reg_nr; ++i)
-		{
-			_v[i] = _memory[_l+i];
-		}
-
-		_next();
 	}
 
 private:
