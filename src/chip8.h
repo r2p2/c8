@@ -197,20 +197,23 @@ public:
 		return _display;
 	}
 
+	void clock()
+	{
+		if (_d > 0)
+			--_d;
+
+		if (_s > 0)
+			--_s;
+	}
+
 	void tick()
 	{
 		_redraw = false;
 
 		_exec();
 
-		if (_d > 0)
-			--_d;
-
 		if (_s > 0)
-		{
-			--_s;
 			_beep_on();
-		}
 		else
 			_beep_off();
 	}

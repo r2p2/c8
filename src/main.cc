@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<time.h>
 #include<signal.h>
+#include<chrono>
 
 #include <fstream>
 
@@ -18,6 +19,12 @@ int msleep(unsigned long milisec)
     while(nanosleep(&req,&req)==-1)
          continue;
     return 1;
+}
+
+std::chrono::time_point<std::chrono::steady_clock> next_clock()
+{
+	return std::chrono::steady_clock::now()
+	     + std::chrono::milliseconds(16);
 }
 
 void update_display(WINDOW* w, Chip8 const& c/*bool (&display)[64*32]*/)
@@ -176,6 +183,8 @@ int main(int argc, char** argv)
 	stack = newwin(18, 10, 2, 81);
 
 
+	auto clock = next_clock();
+
 	int key = 0;
 	int nokey = 0;
 	while(1)
@@ -189,7 +198,7 @@ int main(int argc, char** argv)
 		else
 		{
 			++nokey;
-			if (nokey > 40)
+			if (nokey > 500)
 			{
 				key = ERR;
 				nokey = 0;
@@ -231,9 +240,15 @@ int main(int argc, char** argv)
 		wrefresh(keys);
 		wrefresh(stack);
 
+		if (clock < std::chrono::steady_clock::now())
+		{
+			c.clock();
+			clock = next_clock();
+		}
+
 		c.tick();
 #if 1
-		msleep(15);
+		msleep(1);
 #else
 		timeout(-10);
 		getch();
