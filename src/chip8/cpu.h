@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "display.h"
 #include "input.h"
+#include "snapshot.h"
 
 #include <vector>
 #include <stdint.h>
@@ -26,6 +27,15 @@ public:
 	, _stack()
 	, _rnd_engine()
 	{}
+
+	void save(Snapshot& ss) const
+	{
+		ss.pc = _pc;
+		ss.i  = _i;
+		ss.d  = _d;
+		ss.s  = _s;
+		ss.v  = _v;
+	}
 
 	void clock()
 	{

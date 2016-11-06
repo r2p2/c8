@@ -1,5 +1,7 @@
 #pragma once
 
+#include "snapshot.h"
+
 #include <vector>
 #include <stdint.h>
 
@@ -13,6 +15,11 @@ public:
 	: _updated(false)
 	, _display(width() * height(), 0)
 	{}
+
+	void save(Snapshot& ss) const
+	{
+		ss.display = _display;
+	}
 
 	void clear()
 	{

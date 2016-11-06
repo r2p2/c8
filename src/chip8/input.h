@@ -1,5 +1,7 @@
 #pragma once
 
+#include "snapshot.h"
+
 #include <stdint.h>
 
 namespace chip8
@@ -12,6 +14,12 @@ public:
 	: _avlbl(false)
 	, _value(0)
 	{}
+
+	void save(Snapshot& ss) const
+	{
+		ss.has_input = _avlbl;
+		ss.input     = _value;
+	}
 
 	void press(uint8_t value)
 	{

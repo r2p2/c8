@@ -4,6 +4,7 @@
 #include "display.h"
 #include "input.h"
 #include "cpu.h"
+#include "snapshot.h"
 
 #include<chrono>
 
@@ -19,6 +20,16 @@ public:
 	, _inp()
 	, _cpu(_mem, _dis, _inp)
 	{}
+
+	Snapshot save() const
+	{
+		Snapshot ss;
+		_mem.save(ss);
+		_dis.save(ss);
+		_inp.save(ss);
+		_cpu.save(ss);
+		return ss;
+	}
 
 	void reset()
 	{

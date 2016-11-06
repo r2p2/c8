@@ -1,5 +1,7 @@
 #pragma once
 
+#include "snapshot.h"
+
 #include <vector>
 #include <stdint.h>
 
@@ -16,6 +18,11 @@ public:
 	uint8_t fetch(std::size_t index) const
 	{
 		return _data[index];
+	}
+
+	void save(Snapshot& ss) const
+	{
+		ss.memory = _data;
 	}
 
 	void store(std::size_t index, uint8_t data)
