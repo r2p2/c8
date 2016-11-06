@@ -1,9 +1,8 @@
-#include "chip8.h"
+#include "chip8/system.h"
 
 #include<stdio.h>
 #include<time.h>
 #include<signal.h>
-#include<chrono>
 
 #include <fstream>
 
@@ -21,25 +20,18 @@ int msleep(unsigned long milisec)
     return 1;
 }
 
-std::chrono::time_point<std::chrono::steady_clock> next_clock()
-{
-	return std::chrono::steady_clock::now()
-	     + std::chrono::milliseconds(16);
-}
-
-void update_display(WINDOW* w, Chip8 const& c/*bool (&display)[64*32]*/)
+void update_display(WINDOW* w, chip8::System const& chip8)
 {
 	box(w, 0, 0);
 	mvwprintw(w, 0, 2, "Display");
 
-	if (not c.redraw())
+	if (not chip8.redraw_required())
 		return;
 
-	auto const& display = c.get_display();
 	for (int y = 0; y < 32; ++y)
 		for (int x = 0; x < 64; ++x)
 		{
-			bool const active = display[y*64 + x];
+			bool const active = chip8.pixel(x, y);
 			if (active)
 				wattrset(w, A_REVERSE);
 
@@ -50,6 +42,7 @@ void update_display(WINDOW* w, Chip8 const& c/*bool (&display)[64*32]*/)
 		}
 }
 
+#if 0
 void update_regs(WINDOW* w, Chip8 const& c)
 {
 	mvwprintw(w, 1, 1, "op:0x%02X%02X", c.mem(c.pc()), c.mem(c.pc()+1));
@@ -128,6 +121,7 @@ void update_keys(WINDOW* w, Chip8 const& c)
 	box(w, 0, 0);
 	mvwprintw(w, 0, 2, "Keys");
 }
+#endif
 
 
 int main(int argc, char** argv)
@@ -140,16 +134,11 @@ int main(int argc, char** argv)
 	if (not f.is_open())
 		return 2;
 
-	Chip8 c;
+	std::vector<uint8_t> rom;
 
-	int index = 0x200;
 	char b;
 	while(f.read(&b, 1))
-	{
-		c.mem(index, b);
-		++index;
-	}
-
+		rom.push_back(b);
 	f.close();
 
 	initscr();
@@ -183,7 +172,9 @@ int main(int argc, char** argv)
 	stack = newwin(18, 10, 2, 81);
 
 
-	auto clock = next_clock();
+	chip8::System chip8;
+	chip8.reset();
+	chip8.load_rom(rom);
 
 	int key = 0;
 	int nokey = 0;
@@ -208,31 +199,31 @@ int main(int argc, char** argv)
 
 		switch(key)
 		{
-		case '0': c.key(1 <<  0); break;
-		case '1': c.key(1 <<  1); break;
-		case '2': c.key(1 <<  2); break;
-		case '3': c.key(1 <<  3); break;
-		case '4': c.key(1 <<  4); break;
-		case '5': c.key(1 <<  5); break;
-		case '6': c.key(1 <<  6); break;
-		case '7': c.key(1 <<  7); break;
-		case '8': c.key(1 <<  8); break;
-		case '9': c.key(1 <<  9); break;
-		case 'a': c.key(1 << 10); break;
-		case 'b': c.key(1 << 11); break;
-		case 'c': c.key(1 << 12); break;
-		case 'd': c.key(1 << 13); break;
-		case 'e': c.key(1 << 14); break;
-		case 'f': c.key(1 << 15); break;
+		case '0': chip8.key_pressed( 0); break;
+		case '1': chip8.key_pressed( 1); break;
+		case '2': chip8.key_pressed( 2); break;
+		case '3': chip8.key_pressed( 3); break;
+		case '4': chip8.key_pressed( 4); break;
+		case '5': chip8.key_pressed( 5); break;
+		case '6': chip8.key_pressed( 6); break;
+		case '7': chip8.key_pressed( 7); break;
+		case '8': chip8.key_pressed( 8); break;
+		case '9': chip8.key_pressed( 9); break;
+		case 'a': chip8.key_pressed(10); break;
+		case 'b': chip8.key_pressed(11); break;
+		case 'c': chip8.key_pressed(12); break;
+		case 'd': chip8.key_pressed(13); break;
+		case 'e': chip8.key_pressed(14); break;
+		case 'f': chip8.key_pressed(15); break;
 		default:
-			c.key(0);
+			chip8.key_released();
 		}
 
-		update_display(canvas, c);
-		update_regs(regs, c);
-		update_timer(timer, c);
-		update_keys(keys, c);
-		update_stack(stack, c);
+		update_display(canvas, chip8);
+		//update_regs(regs, c);
+		//update_timer(timer, c);
+		//update_keys(keys, c);
+		//update_stack(stack, c);
 
 		wrefresh(canvas);
 		wrefresh(regs);
@@ -240,20 +231,8 @@ int main(int argc, char** argv)
 		wrefresh(keys);
 		wrefresh(stack);
 
-		if (clock < std::chrono::steady_clock::now())
-		{
-			c.clock();
-			clock = next_clock();
-		}
-
-		c.tick();
-#if 1
+		chip8.tick();
 		msleep(1);
-#else
-		timeout(-10);
-		getch();
-		timeout(0);
-#endif
 	}
 	delwin(keys);
 	delwin(timer);
