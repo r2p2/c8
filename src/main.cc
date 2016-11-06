@@ -92,32 +92,32 @@ void update_keys(WINDOW* w, chip8::Snapshot const& ss)
 	};
 
 	Key keys[] = {
-		{  0, 4, 5, '0'},
-		{  1, 2, 2, '1'},
-		{  2, 4, 2, '2'},
-		{  3, 6, 2, '3'},
-		{  4, 2, 3, '4'},
-		{  5, 4, 3, '5'},
-		{  6, 6, 3, '6'},
-		{  7, 2, 4, '7'},
-		{  8, 4, 4, '8'},
-		{  9, 6, 4, '9'},
-		{ 10, 2, 5, 'A'},
-		{ 11, 6, 5, 'B'},
-		{ 12, 8, 2, 'C'},
-		{ 13, 8, 3, 'D'},
-		{ 14, 8, 4, 'E'},
-		{ 15, 8, 5, 'F'}
+		{  1, 4, 5, '0'},
+		{  2, 2, 2, '1'},
+		{  3, 4, 2, '2'},
+		{  4, 6, 2, '3'},
+		{  5, 2, 3, '4'},
+		{  6, 4, 3, '5'},
+		{  7, 6, 3, '6'},
+		{  8, 2, 4, '7'},
+		{  9, 4, 4, '8'},
+		{ 10, 6, 4, '9'},
+		{ 11, 2, 5, 'A'},
+		{ 12, 6, 5, 'B'},
+		{ 13, 8, 2, 'C'},
+		{ 14, 8, 3, 'D'},
+		{ 15, 8, 4, 'E'},
+		{ 16, 8, 5, 'F'}
 	};
 
 	for (int i = 0; i <= 0xF; ++i)
 	{
-		if (ss.has_input and ss.input == keys[i].value)
+		if (ss.input == keys[i].value)
 			wattrset(w, A_STANDOUT | A_BOLD);
 
 		mvwprintw(w, keys[i].y, keys[i].x, "%c", keys[i].c);
 
-		if (ss.has_input and ss.input == keys[i].value)
+		if (ss.input == keys[i].value)
 			wattroff(w, A_STANDOUT | A_BOLD);
 	}
 
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
 		else
 		{
 			++nokey;
-			if (nokey > 500)
+			if (nokey > 200)
 			{
 				key = ERR;
 				nokey = 0;

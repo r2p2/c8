@@ -11,46 +11,41 @@ class Input
 {
 public:
 	Input()
-	: _avlbl(false)
-	, _value(0)
+	: _value(0)
 	{}
 
 	void save(Snapshot& ss) const
 	{
-		ss.has_input = _avlbl;
-		ss.input     = _value;
+		ss.input = _value;
 	}
 
 	void press(uint8_t value)
 	{
-		_avlbl = true;
-		_value = value;
+		_value = value+1;
 	}
 
 	void release()
 	{
-		_avlbl = false;
+		_value = 0;
 	}
 
 	bool has_input() const
 	{
-		return _avlbl;
+		return _value;
 	}
 
 	uint8_t value() const
 	{
-		return _value;
+		return _value-1;
 	}
 
 	void reset()
 	{
-		_avlbl = false;
 		_value = 0;
 	}
 
 private:
-	bool    _avlbl;
-	uint8_t _value;
+	uint16_t _value;
 };
 
 } // namespace chip8

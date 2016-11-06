@@ -133,12 +133,12 @@ private:
 			switch (kk)
 			{
 			case 0x9E:
-				if (_inp.has_input() and _inp.value() == x)
-					_pc += 2;
+				if (_inp.has_input() and _inp.value() == _v[x])
+					dpc += 2;
 				break;
 			case 0xA1:
-				if (not (_inp.has_input() and _inp.value() == x))
-					_pc += 2;
+				if (not _inp.has_input() or _inp.value() != _v[x])
+					dpc += 2;
 				break;
 			}
 			break;
@@ -147,12 +147,9 @@ private:
 			{
 			case 0x07: _v[x] = _d;                                        break;
 			case 0x0A:
-				_v[x] = 0;
-				if (_inp.has_input())
-				{
-					_v[x] = _inp.value();
-					dpc += 2;
-				}
+				_v[x] = _inp.value();
+				if (not _inp.has_input())
+					dpc = 0;
 				break;
 			case 0x15: _d  = _v[x];                                       break;
 			case 0x18: _s  = _v[x];                                       break;
