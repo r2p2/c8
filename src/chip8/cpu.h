@@ -30,11 +30,12 @@ public:
 
 	void save(Snapshot& ss) const
 	{
-		ss.pc = _pc;
-		ss.i  = _i;
-		ss.d  = _d;
-		ss.s  = _s;
-		ss.v  = _v;
+		ss.pc    = _pc;
+		ss.i     = _i;
+		ss.d     = _d;
+		ss.s     = _s;
+		ss.v     = _v;
+		ss.stack = _stack;
 	}
 
 	void clock()
